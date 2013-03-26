@@ -1,0 +1,46 @@
+ 
+compile:
+g++ -o testingfile GaussianBlur.cpp -std=c++0x
+
+
+
+rgb_store calculateGaussKernel (int kernelRadius) {
+	 // make the kernel
+	 vector< vector<double> > kernel2d ( 2*kernelRadius+1, vector<double>(2*kernelRadius+1));
+
+	  // calculate sigma
+	  double sigma = kernelRadius/2.;
+
+	  double sum = 0; 
+	  int kernalSize = kernel2d.size(); // used 4 times, assumes square kernal
+
+	 // color of current pixel
+	 rgb_store currentColor = {image.red_channel(x,y), image.green_channel(x,y), image.blue_channel(x,y)};
+
+	  for (int i = 0; i < kernalSize ; i++)//row
+		for (int j = 0; j < kernalSize; j++) { //column
+
+		  //assignes value to location in kernal
+		  kernel2d[i][j] = gaussian(i, kernelRadius, sigma) * gaussian(j, kernelRadius, sigma);
+
+		  // adds this kernal value to 
+		  sum += kernel2d[i][j];
+		}
+
+	  // normalize (map all values to add up to 1 using their ratio relative to the sum)
+	  for (i = 0; i < kernalSize; i++)
+		for (j = 0; j < kernalSize; j++)
+		  kernel2d[i][k] /= sum;
+}
+
+
+/* Gaussian Mapping
+/  --> maps pixel within kernal to a value between 0->1 
+/  --> mapping uses e^-x to give outer pixels less significance
+/
+/ @params --> position(int)
+*/
+double gaussian (int& position, double mu, double sigma) {
+	// exponentiate pixel info to match e^-x between 0->1 (makes outer pixels less significant)
+	return exp( -(((position-mu)/(sigma))*((position-mu)/(sigma)))/2.0 );
+}

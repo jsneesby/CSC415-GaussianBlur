@@ -1,6 +1,9 @@
 /* 
 * File:   gaussBlur.cpp
 * Author: Jared Sneesby
+* Linux Compile: g++ -o <testBuild> -O3 GaussianBlur.cpp -std=c++11
+* Cgywin Compile: g++ -o <testBuild> -O3 GaussianBlur.cpp -std=c++0x
+* Run: ./<testBuild> <theImage.bmp> <Blur Radius: 1-9>
 */
 
 #include <iostream>
@@ -13,11 +16,9 @@
 
 using namespace std;
 
-/* Function Definitons
-/
-*/
+/* Function Definitons */
 double gaussianFilterValue(int& i, int& j, int& kernelRadius,float& sigma);
-void gaussinBlurBMP(bitmap_image& image, int kernelRadius);
+bitmap_image gaussinBlurBMP(bitmap_image& image, int kernelRadius);
 double timeDifference (struct timeval * start, struct timeval * end);
 struct kernelElement {double value; rgb_store color;}; // structure to hold kernal element gaussian value and rgb colors
 
@@ -41,7 +42,7 @@ int main(int argc, char** argv) {
 
 	//taking string input and getting image
 	string s = argv[1];
-	bitmap_image image(s);  // -------------------------------------------------> add validation of file name, if not, exit program
+	bitmap_image image(s); 
 
 	int kernelRadius = (int)(argv[2][0] - '0');
 
@@ -49,11 +50,11 @@ int main(int argc, char** argv) {
 	/  --> take the given image and calculate new image with gaussian blur
 	*/ 
 	gettimeofday(&start, NULL);  //blur start
-	gaussinBlurBMP(image, kernelRadius);
+	bitmap_image newImage(gaussinBlurBMP(image, kernelRadius));
 	gettimeofday(&end, NULL); // blur end
 
 	// save the image as a new file
-	image.save_image("blurImage.bmp"); 
+	newImage.save_image("blurImage.bmp"); 
 	gettimeofday(&pg_end, NULL); // program end
 
 
@@ -112,10 +113,15 @@ double gaussianFilterValue(int& i, int& j, int& kernelRadius,float& sigma){
 /         --> kernelRadius: integer
 /         --> kernelRadius: integer
 */
-void gaussinBlurBMP(bitmap_image& image, int kernelRadius){
+bitmap_image gaussinBlurBMP(bitmap_image& image, int kernelRadius){
+	// need to do calculations off of different image, not original (otherwise everything is a bit off)
+	//bitmap_image theImage = image;
+	const unsigned int w = image.width(); 
+	const unsigned int  h = image.height();
+	
+	bitmap_image newImage(w, h);
 
-	int w = image.width(); 
-	int h = image.height();
+
 	int kernelSize = 2*kernelRadius+1; // width and height of kernel, assumes square kernel
 	float sigma = kernelRadius/2.0; // calculate sigma
 	double sum, redSum, greenSum, blueSum;  // sum of values within each kernel
@@ -181,7 +187,7 @@ void gaussinBlurBMP(bitmap_image& image, int kernelRadius){
 					}
 				}
 
-				// sum the values of 
+				// sum the values of special case kernel
 				for (int i = 0; i < kernelSize ; i++){ // kernel row
 					for (int j = 0; j < kernelSize; j++) { // kernel column	
 						// summing on double variable to keep small outside pixel influences
@@ -190,7 +196,7 @@ void gaussinBlurBMP(bitmap_image& image, int kernelRadius){
 						blueSum += kernel2dBoundry[i][j].color.blue * kernel2dBoundry[i][j].value;
 					}
 				}
-				image.set_pixel(x, y, (unsigned char) redSum  , (unsigned char) greenSum , (unsigned char) blueSum) ;
+				newImage.set_pixel(x, y, (unsigned char) redSum  , (unsigned char) greenSum , (unsigned char) blueSum) ;
 			}
 			else{ // all elements of kernel will be in bounds
 				for (int i = 0; i < kernelSize ; i++){ // kernel row
@@ -208,8 +214,9 @@ void gaussinBlurBMP(bitmap_image& image, int kernelRadius){
 				}
 			}
 			// change pixel in the image
-			image.set_pixel(x, y, (unsigned char) redSum  , (unsigned char) greenSum , (unsigned char) blueSum) ;
+			newImage.set_pixel(x, y, (unsigned char) redSum  , (unsigned char) greenSum , (unsigned char) blueSum) ;
 		}
 	}
+	return newImage;
 	//-----------------------------------------------------------------Main Area End-------------------------------------------------------------------------------------//
 }
